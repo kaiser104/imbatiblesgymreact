@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { auth, db } from "./firebaseConfig";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import Login from "./pages/Login";
 import AdminPanel from "./pages/AdminPanel";
 import ExerciseLibrary from "./pages/ExerciseLibrary";
+import ExercisePreview from "./pages/ExercisePreview"; // ✅ Página de prueba de imágenes
 
 function App() {
   const [user, setUser] = useState(null);
@@ -31,25 +33,43 @@ function App() {
   }, []);
 
   return (
-    <div style={{ textAlign: "center", marginTop: "50px" }}>
-      {user ? (
-        role === "administrador" ? (
+    <Router>
+      <Routes>
+        {/* ✅ Ruta de Login por defecto */}
+        <Route path="/" element={user ? <RedirectToDashboard role={role} /> : <Login />} />
+        
+        {/* ✅ Rutas solo accesibles para administradores */}
+        {user && role === "administrador" && (
           <>
-            <AdminPanel />
-            <ExerciseLibrary />
+            <Route path="/admin" element={<AdminPanel />} />
+            <Route path="/library" element={<ExerciseLibrary />} />
           </>
-        ) : (
-          <>
-            <h1>Bienvenido, {user.email} 🎉</h1>
-            <p>Tu rol es: {role}</p>
-            <button onClick={() => signOut(auth)}>Cerrar Sesión</button>
-          </>
-        )
-      ) : (
-        <Login />
-      )}
-    </div>
+        )}
+
+        {/* ✅ Ruta de prueba temporal para visualizar imágenes */}
+        <Route path="/preview" element={<ExercisePreview />} />
+      </Routes>
+    </Router>
   );
 }
+
+/* ✅ Función para redirigir a la vista correcta según el rol */
+const RedirectToDashboard = ({ role }) => {
+  if (role === "administrador") {
+    return (
+      <>
+        <AdminPanel />
+        <ExerciseLibrary />
+      </>
+    );
+  }
+  return (
+    <div style={{ textAlign: "center", marginTop: "50px" }}>
+      <h1>Bienvenido 🎉</h1>
+      <p>Tu rol es: {role}</p>
+      <button onClick={() => signOut(auth)}>Cerrar Sesión</button>
+    </div>
+  );
+};
 
 export default App;
