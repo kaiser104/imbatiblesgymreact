@@ -5,7 +5,7 @@ import { onAuthStateChanged, signOut } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import Login from "./pages/Login";
 import AdminPanel from "./pages/AdminPanel";
-import ExerciseLibrary from "./pages/ExerciseLibrary";
+import ExerciseViewer from "./pages/ExerciseViewer"; // 🔥 Se cambia la biblioteca de ejercicios aquí
 
 function App() {
   const [user, setUser] = useState(null);
@@ -48,10 +48,10 @@ function App() {
           <Login />
         )}
       </div>
-
-      {/* 🔥 Agregando la ruta para la biblioteca de ejercicios */}
+      
       <Routes>
-        <Route path="/library" element={<ExerciseLibrary />} />
+        <Route path="/admin" element={<AdminPanel />} />
+        <Route path="/exercises" element={<ExerciseViewer />} />
       </Routes>
     </Router>
   );

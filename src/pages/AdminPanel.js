@@ -1,48 +1,62 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
+import { useNavigate } from "react-router-dom";
 import { auth, db } from "../firebaseConfig";
-import { onAuthStateChanged, signOut } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
-import { useNavigate } from "react-router-dom"; // 🔥 Importar para manejar la navegación
+import { collection, getDocs, updateDoc, doc, deleteDoc } from "firebase/firestore";
+import { useEffect, useState } from "react";
 
 function AdminPanel() {
-  const [user, setUser] = useState(null);
-  const [role, setRole] = useState(null);
-  const navigate = useNavigate(); // 🔥 Hook para la navegación
+  const [users, setUsers] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      setUser(currentUser);
-      if (currentUser) {
-        const userRef = doc(db, "users", currentUser.uid);
-        const userSnap = await getDoc(userRef);
-        if (userSnap.exists()) {
-          setRole(userSnap.data().role);
-        }
-      } else {
-        setRole(null);
-      }
-    });
+    const fetchUsers = async () => {
+      const usersCollection = collection(db, "users");
+      const usersSnapshot = await getDocs(usersCollection);
+      const usersList = usersSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setUsers(usersList);
+    };
 
-    return () => unsubscribe();
+    fetchUsers();
   }, []);
 
-  return (
-    <div style={{ textAlign: "center", marginTop: "50px" }}>
-      {user && role === "administrador" ? (
-        <>
-          <h1>Panel de Administración</h1>
-          <p>Bienvenido, {user.email}</p>
-          
-          {/* 🔥 Botón para ir a la Biblioteca de Ejercicios */}
-          <button onClick={() => navigate("/library")} style={{ margin: "10px" }}>
-            Ir a la Biblioteca de Ejercicios
-          </button>
+  const handleChangeRole = async (id, newRole) => {
+    const userRef = doc(db, "users", id);
+    await updateDoc(userRef, { role: newRole });
+    setUsers((prevUsers) =>
+      prevUsers.map((user) =>
+        user.id === id ? { ...user, role: newRole } : user
+      )
+    );
+  };
 
-          <button onClick={() => signOut(auth)}>Cerrar Sesión</button>
-        </>
-      ) : (
-        <p>No tienes permiso para acceder a esta página.</p>
-      )}
+  const handleDeleteUser = async (id) => {
+    const userRef = doc(db, "users", id);
+    await deleteDoc(userRef);
+    setUsers((prevUsers) => prevUsers.filter((user) => user.id !== id));
+  };
+
+  return (
+    <div>
+      <h2>Panel de Administración</h2>
+      <button onClick={() => navigate("/exercises")}>Ir a la Biblioteca de Ejercicios</button>
+      <h3>Usuarios Registrados</h3>
+      <ul>
+        {users.map((user) => (
+          <li key={user.id}>
+            {user.email} - Rol: {user.role}
+            <button onClick={() => handleChangeRole(user.id, "administrador")}>
+              Hacer Administrador
+            </button>
+            <button onClick={() => handleChangeRole(user.id, "usuario")}>
+              Hacer Usuario
+            </button>
+            <button onClick={() => handleDeleteUser(user.id)}>Eliminar</button>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
