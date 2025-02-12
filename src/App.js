@@ -6,7 +6,6 @@ import { doc, getDoc, setDoc } from "firebase/firestore";
 import Login from "./pages/Login";
 import AdminPanel from "./pages/AdminPanel";
 import ExerciseLibrary from "./pages/ExerciseLibrary";
-import ExerciseViewer from "./pages/ExerciseViewer"; // 🔥 Nueva página para ver los ejercicios
 
 function App() {
   const [user, setUser] = useState(null);
@@ -37,10 +36,7 @@ function App() {
       <div style={{ textAlign: "center", marginTop: "50px" }}>
         {user ? (
           role === "administrador" ? (
-            <>
-              <AdminPanel />
-              <ExerciseLibrary />
-            </>
+            <AdminPanel />
           ) : (
             <>
               <h1>Bienvenido, {user.email} 🎉</h1>
@@ -53,9 +49,9 @@ function App() {
         )}
       </div>
 
-      {/* 🔥 Nueva ruta para ver los ejercicios */}
+      {/* 🔥 Agregando la ruta para la biblioteca de ejercicios */}
       <Routes>
-        <Route path="/ejercicios" element={<ExerciseViewer />} />
+        <Route path="/library" element={<ExerciseLibrary />} />
       </Routes>
     </Router>
   );
